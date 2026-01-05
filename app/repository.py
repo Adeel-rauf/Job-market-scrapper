@@ -42,11 +42,11 @@ def upsert_job(
         url=url.strip(),
         description=description,
     ).on_conflict_do_nothing(
-        index_elements=[Job.url]  # uses UNIQUE(url)
+        index_elements=[Job.url]  
     )
 
     result = session.execute(stmt)
-    # rowcount is 1 if inserted, 0 if skipped due to conflict
+    
     return result.rowcount == 1
 
 def upsert_skill(session: Session, name: str) -> int:

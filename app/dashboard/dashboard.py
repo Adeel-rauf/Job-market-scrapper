@@ -12,9 +12,6 @@ st.set_page_config(
 
 st.title("📊 Job Market Intelligence Dashboard")
 
-# ------------------------
-# Load data
-# ------------------------
 
 @st.cache_data(ttl=300)
 def load_job_counts():

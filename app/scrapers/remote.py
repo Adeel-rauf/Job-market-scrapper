@@ -13,8 +13,6 @@ from selenium.webdriver.common.by import By
 from app.db import SessionLocal
 from app.repository import get_or_create_company, upsert_job
 from selenium.common.exceptions import TimeoutException, WebDriverException
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-
 
 
 @dataclass
@@ -28,7 +26,6 @@ class RemoteOKJob:
 
 def make_driver() -> webdriver.Chrome:
     opts = Options()
-    # keep visible for now
     # opts.add_argument("--headless=new")
 
     opts.add_argument("--window-size=1400,900")
@@ -38,11 +35,10 @@ def make_driver() -> webdriver.Chrome:
     opts.add_argument("--disable-notifications")
     opts.add_argument("--disable-extensions")
 
-    # Faster: don't wait for every subresource
-    opts.page_load_strategy = "eager"   # "normal" waits too long
+    opts.page_load_strategy = "eager" 
 
     driver = webdriver.Chrome(options=opts)
-    driver.set_page_load_timeout(30)    # was 60; we will retry instead
+    driver.set_page_load_timeout(30) 
     driver.set_script_timeout(30)
     return driver
 
@@ -50,13 +46,10 @@ def make_driver() -> webdriver.Chrome:
 
 
 def load_more(driver, target_jobs: int = 400, max_rounds: int = 40) -> int:
-    """
-    Keep scrolling until job rows stop increasing, or we reach target_jobs, or max_rounds.
-    Uses job row count as the truth (not scrollHeight).
-    """
+    
     wait = WebDriverWait(driver, 15)
 
-    # wait until at least some jobs appear
+    
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "tr.job")))
 
     last_count = 0
@@ -78,19 +71,19 @@ def load_more(driver, target_jobs: int = 400, max_rounds: int = 40) -> int:
             stagnant_rounds = 0
         else:
             stagnant_rounds += 1
-            # if count doesn't increase for a few rounds, we stop
+            
             if stagnant_rounds >= 5:
                 return count
 
-        # Scroll a bit, not only to the bottom (more reliable)
+        
         driver.execute_script("window.scrollBy(0, 1200);")
         time.sleep(1.2)
 
-        # Then scroll to bottom to trigger lazy loads
+        
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(1.5)
 
-        # Try clicking "load more" if it exists (JS click is more reliable)
+        
         try:
             btn = driver.find_element(By.CSS_SELECTOR, "button#load-more")
             if btn.is_displayed() and btn.is_enabled():
@@ -125,7 +118,7 @@ def parse_jobs(html: str) -> List[RemoteOKJob]:
 
     jobs: List[RemoteOKJob] = []
     for r in rows:
-        # Skip non-job rows if any
+        
         if r.get("data-id") is None:
             continue
 

@@ -22,4 +22,3 @@ def main(limit: int = 5000):
 
 if __name__ == "__main__":
     main()
-print(extract_skills_from_fields("Senior Python Developer with Django and PostgreSQL"))
