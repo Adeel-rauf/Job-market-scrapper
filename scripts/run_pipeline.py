@@ -1,3 +1,4 @@
+from scripts.export_skills_csv import export_skills_csv
 import os
 
 def main():
