@@ -1,30 +1,33 @@
 import os
-from pathlib import Path
-from datetime import datetime
-
-OUTPUT_DIR = Path("output")
-OUTPUT_DIR.mkdir(exist_ok=True)
 
 def main():
-    ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-
-    # Detect GitHub Actions
+    # GitHub Actions runner: NO Selenium scraping
     if os.getenv("GITHUB_ACTIONS") == "true":
-        # CI-safe behavior (no Selenium)
-        out = OUTPUT_DIR / f"ci_run_{ts}.txt"
-        out.write_text(
-            "CI run successful.\n"
-            "Selenium scraping is disabled in GitHub Actions.\n"
-            "Local runs perform full scraping.\n",
-            encoding="utf-8",
-        )
-        print("CI run completed safely (no Selenium).")
+        # Export from DB if available; otherwise create a clear message file.
+        try:
+            from scripts.export_skills_csv import export_skills_csv
+            export_skills_csv()
+        except Exception as e:
+            from pathlib import Path
+            from datetime import datetime
+
+            Path("output").mkdir(exist_ok=True)
+            ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+            p = Path("output") / f"ci_note_{ts}.txt"
+            p.write_text(
+                "CI run completed, but database was not available to export skills.\n"
+                f"Error: {e}\n",
+                encoding="utf-8",
+            )
+            print("CI finished (no DB available).")
         return
 
-    # Local run (full Selenium)
-    from app.scrapers.remote import run
-    run()
-    print("Local scrape completed.")
+    # Local run: scrape + save to DB, then export CSV
+    from app.scrapers.remote import run as run_remote
+    run_remote()
+
+    from scripts.export_skills_csv import export_skills_csv
+    export_skills_csv()
 
 if __name__ == "__main__":
     main()
